@@ -1,0 +1,6 @@
+syst_all.txt is a list of all systematics to vary over
+systX.txt is just the same file split into 4 for ease
+
+The keyword ALL runs all systematics possible
+
+runall_covarX.sh takes the .xml file "build_uboone_covariance_template.xml" and add's in each of the systematics, copies it to its own folder, then copies ./build_uboone_covar executable to same directory and runs it.

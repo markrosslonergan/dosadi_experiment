@@ -1,1 +1,22 @@
-Dosadi
+Dosadi Experiment
+
+
+
+
+#CMakeLists will probably have to be changed for uboonegpvm's and duncan/pontecorvo
+
+cd build
+cmake ..
+make
+
+#to run
+
+cd src
+./build_uboone_covar --xml ../../xml/build_uboone_covar.xml
+
+
+# to make lots of pretty splines, 
+cp build/src/build_uboone_covar covar_splines 
+
+and readme in there
+

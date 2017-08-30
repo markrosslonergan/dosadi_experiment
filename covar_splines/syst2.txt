@@ -1,0 +1,16 @@
+genie_NonResRvbarp1pi_Genie 
+genie_NonResRvbarp2pi_Genie 
+genie_NonResRvp1pi_Genie 
+genie_NonResRvp2pi_Genie 
+genie_ResDecayEta_Genie 
+genie_ResDecayGamma_Genie 
+genie_ResDecayTheta_Genie 
+genie_ccresAxial_Genie 
+genie_ccresVector_Genie 
+genie_cohMA_Genie 
+genie_cohR0_Genie 
+genie_ncelAxial_Genie 
+genie_ncelEta_Genie 
+genie_ncresAxial_Genie 
+genie_ncresVector_Genie 
+genie_qema_Genie 
