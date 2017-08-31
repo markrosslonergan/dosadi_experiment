@@ -130,16 +130,12 @@ return 0;
 	TFile * ff = new TFile("example_1.root","RECREATE");
 	TCanvas *c1 = new TCanvas("c1","example_1");
 
+	
 	gr->SetTitle("Scaling of misidentified photon rate ");
 	gr->GetXaxis()->SetTitle("Scale factor");
 	gr->GetYaxis()->SetTitle("#chi^{2}");
 	gr->Draw("ACP");
-
+	
 	c1->Write();
 	ff->Close();
-
-
-
-
-
 }
