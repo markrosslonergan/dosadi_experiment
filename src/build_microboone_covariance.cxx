@@ -30,15 +30,15 @@
 #include "SBNosc.h"
 #include "SBNfit.h"
 #include "SBNfit3pN.h"
+
+
 #include "SBNcovar.h"
-//#include "MCEventWeight.h"
 
 #define no_argument 0
 #define required_argument 1
 #define optional_argument 2
 
 using namespace sbn;
-
 
 /*************************************************************
  *************************************************************
