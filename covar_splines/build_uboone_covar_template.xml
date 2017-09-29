@@ -5,28 +5,42 @@
 
 <detector name="uBooNE" use="1" />
 
-<channel name="elike" use="1" numbins="29">
+<channel name="nuevis" use="1" numbins="19">
 		<bins 
-			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0"
-
-		        widths="0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 "	
+			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.6 1.8 2.0 2.2 2.4 2.6 2.8 3.0"
 		/>
 		<subchannel name="intrinsic" use="1" />
 </channel>
 
-<channel name="mlike" use="1" numbins="29">
-		<bins 
-			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0"
+<channel name="nueangle" use="1" numbins="10">
 
-		        widths="0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 "	
+		<bins 
+			edges="-1 -0.8 -0.6 -0.4 -0.2 0.0 0.2 0.4 0.6  0.8 1.0"
 		/>
 		<subchannel name="intrinsic" use="1" />
 </channel>
+
+
+<channel name="numuvis" use="1" numbins="19">
+		<bins 
+			edges="0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.6 1.8 2.0 2.2 2.4 2.6 2.8 3.0"
+		/>
+		<subchannel name="intrinsic" use="1" />
+</channel>
+
+<channel name="numuangle" use="1" numbins="10">
+
+		<bins 
+			edges="-1 -0.8 -0.6 -0.4 -0.2 0.0 0.2 0.4 0.6  0.8 1.0"
+		/>
+		<subchannel name="intrinsic" use="1" />
+</channel>
+
 
 	
 <covariance file="../build/examples/covariance_matrix.root" name="TMatrixT<double>;1" />
 
-<MCevents multisim="15250" name="fittree" filename="/uboone/data/users/mastbaum/rw_test/fittree_nue_rw2.root" pot="6.6e20" potscale="3.1845e17">
+<MCevents multisim="15250" name="fittree" filename="/home/mark/work/uBooNE/uboone_covariance_builder/rootfiles/fittree_nue_rw2.root" pot="6.6e20" potscale="3.1845e17">
 	<parameters
 		names = "XXX"
 	/>
@@ -44,9 +58,9 @@
 	</btype>
 </MCevents>
 
-<MCevents multisim="15250" name="fittree" filename="/uboone/data/users/mastbaum/rw_test/fittree_bnb_rw2.root" pot="6.6e20" potscale="1.203e15">
+<MCevents multisim="15250" name="fittree" filename="/home/mark/work/uBooNE/uboone_covariance_builder/rootfiles/fittree_bnb_rw2.root" pot="6.6e20" potscale="1.203e15">
 	<parameters
-			names = "XXX"
+		names = "XXX"
 	/>
 	<btype type="0" names="int">
 		<branch name="type"/>
