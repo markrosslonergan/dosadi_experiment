@@ -20,6 +20,8 @@ include(${ROOT_USE_FILE})
 
 set (SBNLIB $ENV{SBNFITDIR})
 
+set(CMAKE_BUILD_TYPE Debug)
+
 
 include_directories("${PROJECT_BINARY_DIR}")
 include_directories(${SBNLIB}/inc)

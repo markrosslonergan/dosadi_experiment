@@ -6,3 +6,7 @@ add_executable (two_dim_test two_dim_test.cxx SBNcovar.cxx)
 target_link_libraries (build_uboone_covar SBNfitlib tinyxmllib ${ROOT_LIBRARIES})
 target_link_libraries (two_dim_test SBNfitlib tinyxmllib ${ROOT_LIBRARIES})
 
+
+add_executable(speedtest speedtest.cxx)
+target_link_libraries (speedtest ${ROOT_LIBRARIES})
+
