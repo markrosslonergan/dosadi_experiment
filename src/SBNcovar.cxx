@@ -3,17 +3,12 @@
 
 using namespace sbn;
 
-SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
-	std::string dict_location = "../../src/AutoDict_map_string__vector_double____cxx.so";
+SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname,false) {
 	gROOT->ProcessLine("#include <map>");
 	gROOT->ProcessLine("#include <vector>");
 	gROOT->ProcessLine("#include <string>");
-	//	gSystem->Load("/uboone/app/users/markrl/sbnfit/whipping_star/src/mdict_h.so");
-
-	std::cout<<"Trying to load dictionary: "<<dict_location<<std::endl;
-	gSystem->Load(  (dict_location).c_str());
+	gInterpreter->GenerateDictionary("map<string,vector<double>>","vector;string;map");
 	gStyle->SetOptStat(0);
-
 
 	universes_used = 0;
 	tolerence_positivesemi = 1e-5;
@@ -24,12 +19,13 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 
 	std::map<std::string, int> parameter_sims;
 
-	SBNspec tm(xmlname,-1);
+	std::cout << "SBNcovar::SBNcovar: Initialize everything" << std::endl;
+	SBNspec tm(xmlname,-1,false);
 	spec_CV = tm;
 	spec_sig  = tm;
 
 
-	//Load all files as per xml
+	std::cout << "SBNcovar::SBNcovar: Load files as listed in xml" << std::endl;
 	std::vector<TFile *> files;	
 	std::vector<TTree *> trees;	
 
@@ -45,17 +41,21 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 
 	std::vector<int> nentries;
 	for(auto &t: trees){
-		//nentries.push_back(100000);
 		nentries.push_back(t->GetEntries());
 	}
 
-	//Very brute 2D
+
+
+// Comment this out until i unerstand what it's doing...
+/*
+	std::cout << "SBNcovar::SBNcovar: Initialize 2d histos for CV and Sig" << std::endl;
 	for(int i=0; i<2; i++){
-		TH2D tmpcv((channel_names.at(2*i)+"_cv").c_str(), channel_names.at(2*i).c_str(), num_bins.at(0), &bin_edges.at(0)[0], num_bins.at(1), &bin_edges.at(1)[0] );
+		TH2D tmpcv((channel_names.at(i)+"_cv").c_str(), channel_names.at(2*i).c_str(), num_bins.at(0), &bin_edges.at(0)[0], num_bins.at(1), &bin_edges.at(1)[0] );
 		h_spec2d_CV.push_back( tmpcv);
-		TH2D tmpsig((channel_names.at(2*i)+"_sig").c_str(), channel_names.at(2*i).c_str(), num_bins.at(0), &bin_edges.at(0)[0], num_bins.at(1), &bin_edges.at(1)[0] );
+		TH2D tmpsig((channel_names.at(i)+"_sig").c_str(), channel_names.at(2*i).c_str(), num_bins.at(0), &bin_edges.at(0)[0], num_bins.at(1), &bin_edges.at(1)[0] );
 		h_spec2d_sig.push_back( tmpsig);
 	}
+*/
 
 	//signal crap todo
 	//
@@ -66,26 +66,22 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 	//SBNspec spec_sig(xmlname,-1);
 
 
+	// Load up weights from TTrees	
+	std::cout << "SBNcovar::SBNcovar: Load up weights from ttrees" << std::endl;
 	vars_i= std::vector<std::vector<int>>(Nfiles   , std::vector<int>(branch_names_int.at(0).size(),0));
 	vars_d= std::vector<std::vector<double>>(Nfiles   , std::vector<double>(branch_names_double.at(0).size(),0.0));
-
-
 	fWeights = new std::vector<std::map<std::string, std::vector<double>>* >(Nfiles,0);
 	fLepMom = new std::vector<TLorentzVector*>(Nfiles,0);
-
 
 	for(int i=0; i< Nfiles; i++){
 		delete fWeights->at(i);	fWeights->at(i) = 0;
 		delete fLepMom->at(i);	fLepMom->at(i) = 0;
-
 
 		trees.at(i)->SetBranchAddress("mcweight", &fWeights->at(i) );// , &bWeight->at(i) );
 		trees.at(i)->SetBranchAddress("leptonMom", &fLepMom->at(i) );//, &bLepMom->at(i)  );
 
 		delete fWeights->at(i);	fWeights->at(i) = 0;
 		delete fLepMom->at(i);	fLepMom->at(i) = 0;
-
-
 
 		for(auto &bfni: branch_names_int){
 			for(int k=0; k< bfni.size();k++){
@@ -100,75 +96,15 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 	}
 
 
-
-	/*************************** test *************************/
-	if(false){
-		int v0p=0;
-		int v1p=0;
-		int v0m=0;
-		int v1m=0;
-		int v0z=0;int v1z=0;	
-		for(int i =0; i< 200000; i++){
-			trees.at(0)->GetEntry(i);
-			trees.at(1)->GetEntry(i);
-
-
-
-			if(fWeights->at(0)->at("kminus_PrimaryHadronNormalization").size()!=1000){ v0m++;}
-			if(fWeights->at(1)->at("kminus_PrimaryHadronNormalization").size()!=1000){ v1m++;}
-
-			if(fWeights->at(0)->at("kplus_PrimaryHadronFeynmanScaling").size()!=1000){v0p++;}
-			if(fWeights->at(1)->at("kplus_PrimaryHadronFeynmanScaling").size()!=1000){v1p++;}
-
-			if(fWeights->at(0)->at("kzero_PrimaryHadronSanfordWang").size()!=1000){v0z++;}
-			if(fWeights->at(1)->at("kzero_PrimaryHadronSanfordWang").size()!=1000){v1z++;}
-
-			std::cout<<i<<" "<<"nue kminus_PrimaryHadronNormalization "<<fWeights->at(0)->at("kminus_PrimaryHadronNormalization").size()<<std::endl;
-			std::cout<<i<<" "<<"bnb kminus_PrimaryHadronNormalization "<<fWeights->at(1)->at("kminus_PrimaryHadronNormalization").size()<<std::endl;
-
-			std::cout<<i<<" "<<"nue kplus_PrimaryHadronFeynmanScaling "<<fWeights->at(0)->at("kplus_PrimaryHadronFeynmanScaling").size()<<std::endl;
-			std::cout<<i<<" "<<"bnb kplus_PrimaryHadronFeynmanScaling "<<fWeights->at(1)->at("kplus_PrimaryHadronFeynmanScaling").size()<<std::endl;
-
-			std::cout<<i<<" "<<"nue kzero_PrimaryHadronSanfordWang "<<fWeights->at(0)->at("kzero_PrimaryHadronSanfordWang").size()<<std::endl;
-			std::cout<<i<<" "<<"bnb kzero_PrimaryHadronSanfordWang "<<fWeights->at(1)->at("kzero_PrimaryHadronSanfordWang").size()<<std::endl;
-			std::cout<<"kplus: ";
-			for(auto wei: fWeights->at(0)->at("kplus_PrimaryHadronFeynmanScaling")){
-				std::cout<<wei<<" ";
-			}
-			std::cout<<std::endl;
-			std::cout<<"kmin: ";
-			for(auto wei: fWeights->at(0)->at("kminus_PrimaryHadronNormalization")){
-				std::cout<<wei<<" ";
-			}
-			std::cout<<std::endl;
-			std::cout<<"kzero: ";
-			for(auto wei: fWeights->at(0)->at("kzero_PrimaryHadronSanfordWang")){
-				std::cout<<wei<<" ";
-			}
-			std::cout<<std::endl;
-
-
-		}
-
-		std::cout<<"1: Min: "<<v1m<<" plus: "<<v1p<<"  zero "<<v1z<<std::endl;
-		std::cout<<"0: Min: "<<v0m<<" plus: "<<v0p<<"  zero "<<v0z<<std::endl;
-		exit(EXIT_FAILURE);
-
-	}
-
-
-
-
-
 	//This bit will calculate how many "multisims" the file has. if ALL default is the inputted xml value 
 	// use a known good event (2 has been checked)
+	std::cout << "SBNcovar::SBNcovar: Calculate how many multisims in file" << std::endl;
 	int good_event = 2;
 	if(parameter_names.at(0)[0]!="ALL"){
 		std::vector<int> used_multisims;
 		for(int j=0; j< Nfiles; j++){
 			delete fWeights->at(j);
 			fWeights->at(j)=0;
-
 
 			trees.at(j)->GetEntry(good_event);
 			std::vector<double> num_sim_here = fWeights->at(j)->at(parameter_names.at(j)[0]);
@@ -189,12 +125,6 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 			universes_used = used_multisims.at(0);
 		}	
 	}else {
-
-
-
-
-
-
 		//warning, currently assumes all the same
 		std::vector<int> used_multisims(Nfiles,0);
 		for(int j = 0;j<Nfiles;j++){
@@ -205,18 +135,12 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 			for(std::map<std::string, std::vector<double> >::iterator  it = fWeights->at(j)->begin(); it != fWeights->at(j)->end(); ++it) 
 			{
 				if( it->first == "bnbcorrection_FluxHist") continue;
-
-
-				//	if(it->first == "kplus_PrimaryHadronFeynmanScaling")continue;
-				//	|| it->first == "kzero_PrimaryHadronSanfordWang" || it->first== "kminus_PrimaryHadronNormalization")continue;
-
 				used_multisims.at(j) += it->second.size();
 				std::cout<<"ALL: "<<it->first<<" has "<<it->second.size()<<" multisims in file "<<j<<std::endl;
 			}
 			delete fWeights->at(j);
 			fWeights->at(j)=0;
 		}
-
 		for(int i=1; i<Nfiles; i++){
 			std::cout<<"File: "<<i-1<<" has "<<used_multisims.at(i-1)<<" multisims"<<std::endl;
 			std::cout<<"File: "<<i<<" has "<<used_multisims.at(i)<<" multisims"<<std::endl;
@@ -226,22 +150,17 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 			}
 			universes_used = used_multisims.at(0);
 		}	
-
-
 	}
 
 
 	//Ok now we know now many universes we have, initilize all the sbnspecs
 	std::cout<<"Initilizing "<<universes_used<<" universes for "<<parameter_names[0][0]<<std::endl;
 
-
-		
-
-	SBNspec temp_spec(xmlname,0);
+	SBNspec temp_spec(xmlname,0,false);
 	int num_2d_bins = temp_spec.num_bins[0]*temp_spec.num_bins[1]+temp_spec.num_bins[2]*temp_spec.num_bins[3];
 	std::vector<double> base_vec (temp_spec.num_bins_total,0.0);
 	std::vector<double> base_vec2D(num_2d_bins, 0);
-	std::cout<<"We have : "<<num_2d_bins<<" 2d bins."<<std::endl;
+	std::cout << "We have : " << num_2d_bins << " 2d bins." <<std::endl;
 
 	vecspec2DCV = base_vec2D;
 
@@ -316,8 +235,6 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 
 						if(it->first == "bnbcorrection_FluxHist") continue;
 
-
-						//	std::cout<<"file: "<<j<<" "<<it->first<<" "<<" size "<<it->second.size()<<std::endl;
 						for(auto &wei: it->second)
 						{
 							if(std::isinf(wei) || wei!= wei){
@@ -334,19 +251,9 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 								wei = 1;
 							}
 
-
 							weights.push_back(wei*global_weight);
-
-
-
 						}//end of weight vector loop for this parameter
-
-
 					}//end of all parameter iterator
-
-
-
-
 				}//end of "ALL" option
 				//Begininning of single parameter options
 				else {
@@ -360,17 +267,10 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 							std::cout<<"Killing. event # "<<i<<" in File "<<multisim_file.at(j)<<" weight: "<<wei<<" global bnb: "<<global_weight<<" in "<<parameter_names.at(j)[0]<<std::endl;
 							exit(EXIT_FAILURE);
 						}
-
+					
 						weights.push_back(wei*global_weight);
-
-
 					}//end of this weight loop
-
-
-
-
 				}//end of single parameter scan
-
 
 				delete fWeights->at(j);fWeights->at(j) = 0;
 
@@ -399,8 +299,7 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 				int bin2D = en_bin2 + num_bins.at(0)*cos_bin2 + j*num_bins.at(0)*num_bins.at(1);
 			
 				for(int m=0; m<weights.size(); m++){
-					//This is the part where we will every histogram in this Universe
-					//this->fillHistograms(j, m, weights.at(m) );
+					//This is the part where we fill every histogram in this Universe
 					if(en_bin>=0)  multi_vecspec.at(m).at(en_bin)   +=  weights.at(m);
 					if(cos_bin>=0) multi_vecspec.at(m).at(cos_bin)  +=  weights.at(m);
 
@@ -438,36 +337,30 @@ SBNcovar::SBNcovar(std::string xmlname) : SBNconfig(xmlname) {
 	
 				if(en_bin2 >=0&& cos_bin2>=0) vecspec2DCV.at(bin2D) += global_weight;	
 
-
-
 				delete fLepMom->at(j);fLepMom->at(j) = 0;
-
 
 			}//end of CCQE..interaction type check.. OH no this should be in fillHistograms
 		} //end of entry loop
 		std::cout<<"ERRORed out of : "<<nerr<<std::endl;	
 	}//end of file loop 
+	
 
+	// Cleanup and close everything out.
 	delete fWeights;
 	delete fLepMom;
 
 	std::cout<<"ATTENTION: Skipped a total of: "<<num_skipped<<" Due to nan/inf bnb weights"<<std::endl;
 	std::cout<<"ATTENTION: Skipped a total of: "<<num_skipped_kaon<<" Due to kaon bug"<<std::endl;
 
-
-	/***************************************************************
-	 *		Now some clean-up and Writing
-	 * ************************************************************/
-
 	for(auto &f: files){
 		f->Close();
 	}
 
 }
-/***************************************************************
- *		Some virtual functions for selection and histogram filling
- * ************************************************************/
 
+/***************************************************************
+ *	Virtual function for selection
+ * ************************************************************/
 bool SBNcovar::eventSelection(int which_file){
 	//from here have access to vars_i  and vars_d  to make a selection
 
@@ -480,36 +373,13 @@ bool SBNcovar::eventSelection(int which_file){
 		if(vars_i.at(which_file)[3] == 13 || vars_i.at(which_file)[3] == -13  ){
 			ans = true;
 		}
-
-
 	}
-
 	return ans;
-}
-
-int SBNcovar::fillHistograms(int file, int uni, double wei){
-	//Fill the histograms
-	//
-	/*	TRandom3 rangen(0);
-		double sigma = 0;
-		if(file==0){
-		sigma=;
-		}else if(file==1){
-		sigma=;
-		}	
-		double en = rangen.Gaus( vars_d.at(file), sigma );
-	 */	
-	double en = vars_d.at(file)[0];
-	//multi_sbnspec.at(uni).hist.at(file).Fill(en, wei);
-
-	return 0;
 }
 
 /***************************************************************
  *		And then form a covariance matrix (well 3)
  * ************************************************************/
-
-
 int SBNcovar::formCovarianceMatrix(){
 
 	int num_bins_total2D = vecspec2DCV.size();
@@ -611,9 +481,6 @@ int SBNcovar::formCovarianceMatrix(){
 		}
 	}
 
-
-
-
 	for(int i=0; i<num_bins_total2D; i++){
 		for(int j=0; j<num_bins_total2D; j++){
 
@@ -636,9 +503,6 @@ int SBNcovar::formCovarianceMatrix(){
 	}
 
 
-
-
-
 	/************************************************************
 	 *			Saving to file				    *
 	 * *********************************************************/
@@ -646,47 +510,6 @@ int SBNcovar::formCovarianceMatrix(){
 
 	TFile *ftest=new TFile(nn.c_str(),"RECREATE");
 	ftest->cd();
-
-	/*
-	   TCanvas *cspline =  new TCanvas("Splines");
-	   int num_hists = multi_sbnspec.at(0).hist.size();
-	   cspline->Divide(num_hists,1);
-
-	   for(int h=0; h<spec_CV.hist.size(); h++){
-	   cspline->cd(h+1);
-	   spec_CV.hist.at(h).SetLineColor(kBlack);
-	   spec_CV.hist.at(h).SetLineWidth(4);
-	   spec_CV.hist.at(h).SetTitle( (fullnames[h]+" : "+parameter_names[0][0]).c_str() );
-	   spec_CV.hist.at(h).Draw("L SAME");
-	   }
-
-	   TRandom3 * rangen = new TRandom3(0);
-	   for(int m=0; m< universes_used; m++){
-	   for(int h=0; h<multi_sbnspec.at(m).hist.size(); h++){
-	   cspline->cd(h+1);
-	   TGraph *g = new TGraph( );
-	   multi_sbnspec.at(m).hist.at(h).SetLineColor(rangen->Uniform(400,900));
-
-	   multi_sbnspec.at(m).hist.at(h).Draw("L SAME");
-	   }
-	   }
-	   delete rangen;
-
-	   for(int h=0; h<spec_CV.hist.size(); h++){
-	   cspline->cd(h+1);
-	   spec_CV.hist.at(h).SetLineWidth(4);
-	   spec_CV.hist.at(h).Draw("L SAME");
-	   }
-
-
-	   cspline->Write();
-	   std::string ppsp = "splines_"+parameter_names[0][0]+".pdf";
-
-	   cspline->SaveAs(ppsp.c_str());
-	 */
-
-
-
 
 	//matricies
 	TCanvas *c1 =  new TCanvas("Fractional Covariance Matrix");
@@ -831,7 +654,6 @@ int SBNcovar::formCovarianceMatrix(){
 	ftest->cd();
 	h_spec2d_CV.at(0).Write();
 	h_spec2d_CV.at(1).Write();
-
 	
 	h_spec2d_sig.at(0).Write();
 	h_spec2d_sig.at(1).Write();
@@ -846,19 +668,18 @@ int SBNcovar::formCovarianceMatrix(){
 	hist_full_cov2D->Write();
 	hist_frac_cov2D->Write();
 	hist_full_cor2D->Write();
-
 	frac_covariance2D.Write();
 	full_covariance2D.Write();
 	full_correlation2D.Write();
 
-
-
 	ftest->Close();
+
+
 	/************************************************************
 	 *		Quality Testing Suite			    *
 	 * *********************************************************/
-
-
+	std::cout << "Testing covariance matrix quality." << std::endl;
+	
 	if(full_covariance.IsSymmetric()){
 		std::cout<<"Generated covariance matrix is symmetric"<<std::endl;
 	}else{
@@ -866,11 +687,9 @@ int SBNcovar::formCovarianceMatrix(){
 		exit(EXIT_FAILURE);
 	}
 
-
 	//if a matrix is (a) real and (b) symmetric (checked above) then to prove positive semi-definite, we just need to check eigenvalues and >=0;
 	TMatrixDEigen eigen (full_covariance);
 	TVectorD eigen_values = eigen.GetEigenValuesRe();
-
 
 	for(int i=0; i< eigen_values.GetNoElements(); i++){
 		if(eigen_values(i)<0){
@@ -882,24 +701,11 @@ int SBNcovar::formCovarianceMatrix(){
 		}
 	}
 
-
 	if(is_small_negative_eigenvalue){	
 		std::cout<<"Generated covariance matrix is (allmost) positive semi-definite. It did contain small negative values of absolute value <= :"<<tolerence_positivesemi<<std::endl;
 	}else{
 		std::cout<<"Generated covariance matrix is also positive semi-definite."<<std::endl;
 	}
-
-
-	/*
-	   for (int i=1;i<=11 ;i++){
-	   hist_frac_cov->GetYaxis()->SetBinLabel(i,std::to_string( bin_edges[0][i-1] ).c_str());
-	   hist_frac_cov->GetXaxis()->SetBinLabel(i,std::to_string( bin_edges[0][i-1] ).c_str());
-	   hist_full_cov->GetYaxis()->SetBinLabel(i,std::to_string( bin_edges[0][i-1] ).c_str());
-	   hist_full_cov->GetXaxis()->SetBinLabel(i,std::to_string( bin_edges[0][i-1] ).c_str());
-	   hist_full_cor->GetYaxis()->SetBinLabel(i,std::to_string( bin_edges[0][i-1] ).c_str());
-	   hist_full_cor->GetXaxis()->SetBinLabel(i,std::to_string( bin_edges[0][i-1] ).c_str());
-	   }
-	 */
 
 	return 0;
 }
